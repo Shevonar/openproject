@@ -1,3 +1,4 @@
+#-- encoding: UTF-8
 #-- copyright
 # OpenProject is a project management system.
 # Copyright (C) 2012-2013 the OpenProject Foundation (OPF)
@@ -26,36 +27,41 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class ReportedProjectStatusesController < ApplicationController
-  unloadable
-  helper :timelines
+class Reports::ReportsService
 
-  before_filter :disable_api
-  before_filter :require_login
-  before_filter :determine_base
-  accept_key_auth :index, :show
+  class_attribute :report_types
 
-  def index
-    @reported_project_statuses = @base.all
-    respond_to do |format|
-      format.html { render_404 }
-    end
+  def self.add_report(report)
+    self.report_types ||= {}
+    self.report_types[report.report_type] = report
   end
 
-  def show
-    @reported_project_status = @base.find(params[:id])
-    respond_to do |format|
-      format.html { render_404 }
-    end
+  def self.has_report_for?(report_type)
+    self.report_types.has_key? report_type
   end
 
-  protected
 
-  def determine_base
-    if params[:project_type_id]
-      @base = ProjectType.find(params[:project_type_id]).reported_project_statuses.active
-    else
-      @base = ReportedProjectStatus.active
-    end
+  # automate this? by cycling through each instance of Reports::Report? or is this to automagically?
+  # and there is no reason, why plugins shouldn't be able to use this to add their own customized reports...
+  add_report Reports::SubprojectReport
+  add_report Reports::AuthorReport
+  add_report Reports::AssigneeReport
+  add_report Reports::TypeReport
+  add_report Reports::PriorityReport
+  add_report Reports::CategoryReport
+  add_report Reports::VersionReport
+
+
+
+
+  def initialize(project)
+    raise "You must provide a project to report upon" unless project && project.is_a?(Project)
+    @project = project
   end
+
+  def report_for(report_type)
+    report_klass = self.class.report_types[report_type]
+    report_klass.new(@project) if report_klass
+  end
+
 end

@@ -1,3 +1,4 @@
+#-- encoding: UTF-8
 #-- copyright
 # OpenProject is a project management system.
 # Copyright (C) 2012-2013 the OpenProject Foundation (OPF)
@@ -26,36 +27,47 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class ReportedProjectStatusesController < ApplicationController
-  unloadable
-  helper :timelines
+class Reports::Report
 
-  before_filter :disable_api
-  before_filter :require_login
-  before_filter :determine_base
-  accept_key_auth :index, :show
-
-  def index
-    @reported_project_statuses = @base.all
-    respond_to do |format|
-      format.html { render_404 }
-    end
+  def initialize(project)
+    @project = project
   end
 
-  def show
-    @reported_project_status = @base.find(params[:id])
-    respond_to do |format|
-      format.html { render_404 }
-    end
+  def self.report_type
+    "default"
   end
 
-  protected
-
-  def determine_base
-    if params[:project_type_id]
-      @base = ProjectType.find(params[:project_type_id]).reported_project_statuses.active
-    else
-      @base = ReportedProjectStatus.active
-    end
+  def report_type
+    self.class.report_type
   end
+
+  def statuses
+    @statuses ||= Status.order('position')
+  end
+
+  # ---- every report needs to implement these methods to supply all needed data for a report -----
+  def field
+    raise NotImplementedError
+  end
+
+  def rows
+    raise NotImplementedError
+  end
+
+  def data
+    raise NotImplementedError
+  end
+
+  def title
+    raise NotImplementedError
+  end
+
 end
+
+
+
+
+
+
+
+

@@ -26,36 +26,17 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class ReportedProjectStatusesController < ApplicationController
-  unloadable
-  helper :timelines
+require 'spec_helper'
 
-  before_filter :disable_api
-  before_filter :require_login
-  before_filter :determine_base
-  accept_key_auth :index, :show
+describe Reports::ReportsService do
 
-  def index
-    @reported_project_statuses = @base.all
-    respond_to do |format|
-      format.html { render_404 }
-    end
+  let(:project) {FactoryGirl.create(:project)}
+
+  it "should be initializable with a project" do
+    expect { Reports::ReportsService.new(project)}.not_to raise_error
   end
 
-  def show
-    @reported_project_status = @base.find(params[:id])
-    respond_to do |format|
-      format.html { render_404 }
-    end
-  end
-
-  protected
-
-  def determine_base
-    if params[:project_type_id]
-      @base = ProjectType.find(params[:project_type_id]).reported_project_statuses.active
-    else
-      @base = ReportedProjectStatus.active
-    end
+  it "should raise an error, when given no project" do
+    expect { Reports::ReportsService.new(nil)}.to raise_error
   end
 end

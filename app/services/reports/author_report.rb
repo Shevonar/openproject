@@ -1,3 +1,4 @@
+#-- encoding: UTF-8
 #-- copyright
 # OpenProject is a project management system.
 # Copyright (C) 2012-2013 the OpenProject Foundation (OPF)
@@ -25,10 +26,25 @@
 #
 # See doc/COPYRIGHT.rdoc for more details.
 #++
+class Reports::AuthorReport < Reports::Report
 
-class PrincipalsController < ApplicationController
-  extend Pagination::Controller
+  def self.report_type
+    "author"
+  end
 
-  paginate_model Principal
-  search_for Principal, :like
+  def field
+    "author_id"
+  end
+
+  def rows
+    @rows ||= @project.members.collect { |m| m.user }.sort
+  end
+
+  def data
+    @data ||= WorkPackage.by_author(@project)
+  end
+
+  def title
+    @title ||= WorkPackage.human_attribute_name(:author)
+  end
 end

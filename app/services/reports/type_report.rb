@@ -1,3 +1,4 @@
+#-- encoding: UTF-8
 #-- copyright
 # OpenProject is a project management system.
 # Copyright (C) 2012-2013 the OpenProject Foundation (OPF)
@@ -25,37 +26,27 @@
 #
 # See doc/COPYRIGHT.rdoc for more details.
 #++
+class Reports::TypeReport < Reports::Report
 
-class ReportedProjectStatusesController < ApplicationController
-  unloadable
-  helper :timelines
-
-  before_filter :disable_api
-  before_filter :require_login
-  before_filter :determine_base
-  accept_key_auth :index, :show
-
-  def index
-    @reported_project_statuses = @base.all
-    respond_to do |format|
-      format.html { render_404 }
-    end
+  def self.report_type
+    "type"
   end
 
-  def show
-    @reported_project_status = @base.find(params[:id])
-    respond_to do |format|
-      format.html { render_404 }
-    end
+  def field
+    @field || "type_id"
   end
 
-  protected
-
-  def determine_base
-    if params[:project_type_id]
-      @base = ProjectType.find(params[:project_type_id]).reported_project_statuses.active
-    else
-      @base = ReportedProjectStatus.active
-    end
+  def rows
+    @rows ||= @project.types
   end
+
+  def data
+    @data ||= WorkPackage.by_type(@project)
+    end
+
+  def title
+    @title = WorkPackage.human_attribute_name(:type)
+  end
+
 end
+
